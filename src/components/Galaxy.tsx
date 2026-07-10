@@ -1,10 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars, OrbitControls, Environment, Float, Html, Sparkles, useTexture } from '@react-three/drei';
+import { Stars, OrbitControls, Float, Sparkles, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { Planet } from './Planet';
 import { Song, songs } from '../data/songs';
-import { createNoiseTexture } from '../utils/textures';
 
 interface GalaxyProps {
   onPlanetClick: (song: Song) => void;
@@ -16,7 +15,7 @@ const BackgroundElements = () => {
   const elements = React.useMemo(() => {
     // Super vibrant, cute, neon color palette
     const colors = ['#00ffff', '#ff1493', '#ffd700', '#39ff14', '#7df9ff', '#ff00ff', '#ffa500', '#ffb6c1'];
-    return Array.from({ length: 150 }).map((_, i) => ({
+    return Array.from({ length: 150 }).map(() => ({
       position: [
         (Math.random() - 0.5) * 150,
         (Math.random() - 0.5) * 100,
@@ -82,7 +81,7 @@ const ShootingStar = ({ delay }: { delay: number }) => {
     if (glowMat) glowMat.opacity = 0;
   };
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (!meshRef.current) return;
     
     // Handle delay
@@ -320,7 +319,6 @@ export const Galaxy: React.FC<GalaxyProps> = ({ onPlanetClick, activeSong, onCen
             <Planet
               key={song.id}
               song={song}
-              position={[radius, 0, 0]}
               orbitRadius={radius}
               orbitSpeed={speed}
               onClick={onPlanetClick}

@@ -7,14 +7,13 @@ import { createNoiseTexture, createBandedTexture } from '../utils/textures';
 
 interface PlanetProps {
   song: Song;
-  position: [number, number, number];
   orbitRadius: number;
   orbitSpeed: number;
   onClick: (song: Song) => void;
   isActive: boolean;
 }
 
-export const Planet: React.FC<PlanetProps> = ({ song, position, orbitRadius, orbitSpeed, onClick, isActive }) => {
+export const Planet: React.FC<PlanetProps> = ({ song, orbitRadius, orbitSpeed, onClick, isActive }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -65,7 +64,6 @@ export const Planet: React.FC<PlanetProps> = ({ song, position, orbitRadius, orb
   const normalMap = React.useMemo(() => createNoiseTexture(512, 100), []);
   const coreMap = React.useMemo(() => createBandedTexture(song.color, 512), [song.color]);
 
-  const targetScale = isActive ? 1.5 : (hovered ? 1.2 : 1);
   const glowColor = new THREE.Color(song.color);
   
   return (

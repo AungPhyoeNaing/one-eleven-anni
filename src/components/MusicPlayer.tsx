@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { Howl, Howler } from 'howler';
-import { Song, songs } from '../data/songs';
+import { Song } from '../data/songs';
 
 interface MusicPlayerProps {
   currentSong: Song | null;
@@ -14,7 +14,7 @@ interface MusicPlayerProps {
 export const MusicPlayer: React.FC<MusicPlayerProps> = ({ currentSong, onClose, onNext, onPrev }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(0.5);
+  const [volume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
   
   const soundRef = useRef<Howl | null>(null);
