@@ -1,144 +1,243 @@
-import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { WelcomeScreen } from './components/WelcomeScreen';
-import { Galaxy } from './components/Galaxy';
-import { MusicPlayer } from './components/MusicPlayer';
-import { LoveLetter } from './components/LoveLetter';
-import { Song, songs } from './data/songs';
+import { lazy, Suspense, useRef, useState } from "react";
+import {
+  ArrowUpRight,
+  Heart,
+  Mail,
+  Orbit,
+  Pause,
+  Play,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
+import { MusicPlayer, PlaybackHandle } from "./components/MusicPlayer";
+import { LoveLetter } from "./components/LoveLetter";
+import { Modal } from "./components/Modal";
+import { Song, songs } from "./data/songs";
+const Galaxy = lazy(() => import("./components/Galaxy"));
 
 function App() {
-  const [hasEntered, setHasEntered] = useState(false);
-  const [activeSong, setActiveSong] = useState<Song | null>(null);
+  const [activeSong, setActiveSong] = useState(songs[0]);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isLetterOpen, setIsLetterOpen] = useState(false);
   const [isPhotoOpen, setIsPhotoOpen] = useState(false);
   const [secretClickCount, setSecretClickCount] = useState(0);
-
-  const handlePhotoClick = () => {
-    const newCount = secretClickCount + 1;
-    setSecretClickCount(newCount);
-    if (newCount >= 5) {
-      setIsLetterOpen(true);
-      setIsPhotoOpen(false);
-      setSecretClickCount(0);
+  const [resetView, setResetView] = useState(0);
+  const [motionPaused, setMotionPaused] = useState(false);
+  const player = useRef<PlaybackHandle>(null);
+  const selectSong = (song: Song) => {
+    if (song.id === activeSong.id) player.current?.toggle();
+    else {
+      setActiveSong(song);
+      player.current?.playSong(song);
     }
   };
-
-  const handleNextSong = () => {
-    if (!activeSong) return;
-    const currentIndex = songs.findIndex(s => s.id === activeSong.id);
-    const nextIndex = (currentIndex + 1) % songs.length;
-    setActiveSong(songs[nextIndex]);
+  const changeSong = (direction: number) => {
+    const song =
+      songs[
+        (songs.findIndex((item) => item.id === activeSong.id) +
+          direction +
+          songs.length) %
+          songs.length
+      ];
+    setActiveSong(song);
+    player.current?.playSong(song);
   };
-
-  const handlePrevSong = () => {
-    if (!activeSong) return;
-    const currentIndex = songs.findIndex(s => s.id === activeSong.id);
-    const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-    setActiveSong(songs[prevIndex]);
-  };
-
   return (
-    <div className="w-full h-[100dvh] bg-cosmic-dark overflow-hidden relative">
-      <AnimatePresence mode="wait">
-        {!hasEntered ? (
-          <WelcomeScreen key="welcome" onEnter={() => setHasEntered(true)} />
-        ) : (
-          <React.Fragment key="universe">
-            {/* 3D Galaxy Scene */}
-            <Galaxy 
-              onPlanetClick={setActiveSong} 
-              activeSong={activeSong} 
-              onCenterClick={() => setIsPhotoOpen(true)}
-            />
-            
-            {/* Photo Modal */}
-            <AnimatePresence>
-              {isPhotoOpen && (
-                <motion.div
-                  className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-2xl bg-cosmic-dark/80"
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  onClick={() => setIsPhotoOpen(false)}
+    <div className="universe">
+      <a className="skip-link" href="#soundtrack">
+        Skip to soundtrack
+      </a>
+      <Suspense
+        fallback={
+          <div className="scene-loading" role="status">
+            <Orbit size={22} /> Gathering a little stardust…
+          </div>
+        }
+      >
+        <Galaxy
+          activeSong={activeSong}
+          isPlaying={isPlaying}
+          onPlanetClick={selectSong}
+          onCenterClick={() => setIsPhotoOpen(true)}
+          resetView={resetView}
+          motionPaused={motionPaused}
+        />
+      </Suspense>
+      <header className="site-header page-width">
+        <a
+          className="brand"
+          href="#main"
+          aria-label="APN and Jia, home"
+          onClick={() => setResetView((value) => value + 1)}
+        >
+          <span className="brand-symbol">
+            <Orbit size={28} />
+          </span>
+          <span>
+            APN <span className="brand-amp">&</span> JIA
+            <span className="brand-caption">A universe of our own</span>
+          </span>
+        </a>
+        <span className="header-dedication">
+          <span /> Somewhere, in every lifetime.
+        </span>
+        <button className="letter-nav" onClick={() => setIsLetterOpen(true)}>
+          <Mail size={16} />
+          <span>A letter for you</span>
+          <ArrowUpRight size={13} />
+        </button>
+      </header>
+      <main id="main">
+        <section className="galaxy-intro" aria-labelledby="hero-title">
+          <div className="wish-time" aria-label="Eleven eleven">
+            11:11<span className="wish-star">✧</span>
+          </div>
+          <p className="wish-caption">I made a wish. It was you.</p>
+          <h1 id="hero-title">
+            My favorite place
+            <br />
+            in the universe.
+          </h1>
+          <p className="hero-description">
+            Isn’t a place at all.
+            <br />
+            It’s a little closer to you.
+          </p>
+          <button
+            className="primary-button"
+            onClick={() => selectSong(activeSong)}
+          >
+            {isPlaying ? (
+              <Pause size={15} fill="currentColor" />
+            ) : (
+              <Play size={15} fill="currentColor" />
+            )}
+            {isPlaying ? "Pause our soundtrack" : "Let our universe play"}
+          </button>
+          <p className="personal-note">
+            For Jia. Always, in all ways. <Heart size={12} />
+          </p>
+        </section>
+        <div className="scene-tools">
+          <span>
+            <span className="drag-symbol">↔</span> Drag to wander. Pick a planet
+            to listen.
+          </span>
+          <button
+            onClick={() => setResetView((value) => value + 1)}
+            aria-label="Reset galaxy view"
+          >
+            <RotateCcw size={14} /> Reset view
+          </button>
+          <button
+            aria-pressed={motionPaused}
+            onClick={() => setMotionPaused((value) => !value)}
+          >
+            {motionPaused ? <Play size={12} /> : <Pause size={12} />}
+            {motionPaused ? "Resume motion" : "Pause motion"}
+          </button>
+        </div>
+        <section
+          className="soundtrack-section page-width"
+          id="soundtrack"
+          aria-label="The soundtrack of us"
+        >
+          <div className="soundtrack-intro">
+            <Sparkles size={15} />
+            <span>
+              Three little worlds.
+              <br />
+              <strong>A thousand feelings.</strong>
+            </span>
+          </div>
+          <div className="song-grid">
+            {songs.map((song, index) => {
+              const playing = activeSong.id === song.id && isPlaying;
+              return (
+                <button
+                  key={song.id}
+                  className={`song-card ${activeSong.id === song.id ? "is-selected" : ""}`}
+                  onClick={() => selectSong(song)}
+                  aria-label={`${playing ? "Pause" : "Play"} ${song.title} by ${song.artist}`}
+                  aria-pressed={playing}
                 >
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0, rotate: -20, filter: 'blur(20px)' }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0, filter: 'blur(0px)' }}
-                    exit={{ scale: 1.5, opacity: 0, rotate: 10, filter: 'blur(20px)' }}
-                    transition={{ type: "spring", stiffness: 80, damping: 20, mass: 1 }}
-                    className="relative max-w-2xl w-full flex justify-center items-center"
-                    onClick={(e) => { e.stopPropagation(); handlePhotoClick(); }}
+                  <span
+                    className={`song-orb song-orb-${index}`}
+                    aria-hidden="true"
+                  />
+                  <span className="song-card-copy">
+                    <span className="song-chapter">{song.title}</span>
+                    <strong>{song.track}</strong>
+                    <span className="song-artist">{song.artist}</span>
+                  </span>
+                  <span
+                    className={playing ? "equalizer" : "song-play"}
+                    aria-hidden="true"
                   >
-                    {/* Magical Cosmic Aura behind the image */}
-                    <motion.div 
-                      className="absolute w-[120%] h-[120%] max-w-[80vh] max-h-[80vh] -z-10 rounded-full blur-[80px] bg-gradient-to-tr from-pink-500/40 via-purple-500/30 to-blue-500/40"
-                      animate={{ 
-                        rotate: [0, 360],
-                        scale: [1, 1.1, 0.9, 1],
-                      }}
-                      transition={{ 
-                        duration: 12,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
-                    />
-
-                    <motion.img 
-                      src="/images/central-star-photo.jpg" 
-                      alt="Jia" 
-                      className="max-h-[80vh] w-auto rounded-3xl shadow-[0_0_80px_rgba(255,105,180,0.5)] border border-pink-300/40 object-contain cursor-pointer relative z-10"
-                      whileHover={{ scale: 1.02, shadow: "0 0 150px rgba(255,105,180,0.8)" }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setIsPhotoOpen(false); }}
-                      className="absolute top-2 right-2 md:-top-4 md:-right-4 w-10 h-10 bg-black/50 hover:bg-pink-500/80 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/20 z-20"
-                    >
-                      ✕
-                    </button>
-                    {secretClickCount > 0 && secretClickCount < 5 && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/90 font-medium tracking-wide text-sm bg-pink-500/40 px-6 py-2 rounded-full backdrop-blur-xl border border-pink-300/30 shadow-[0_0_20px_rgba(255,105,180,0.5)] z-20 pointer-events-none"
-                      >
-                        {5 - secretClickCount} more...
-                      </motion.div>
+                    {playing ? (
+                      <>
+                        <i />
+                        <i />
+                        <i />
+                      </>
+                    ) : (
+                      <Play size={12} />
                     )}
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            {/* UI Overlay */}
-            <div className="absolute top-6 w-full flex justify-center pointer-events-none z-10">
-              <div className="glass px-6 py-2 rounded-full pointer-events-auto opacity-70 hover:opacity-100 transition-opacity">
-                <p className="text-white/80 text-sm font-light tracking-wide">
-                  Explore APN & JIA's Galaxy ✨
-                </p>
-              </div>
-            </div>
-
-            {/* Music Player */}
-            <MusicPlayer 
-              currentSong={activeSong}
-              onClose={() => setActiveSong(null)}
-              onNext={handleNextSong}
-              onPrev={handlePrevSong}
-            />
-
-            {/* Secret Love Letter */}
-            <LoveLetter 
-              isOpen={isLetterOpen}
-              onClose={() => setIsLetterOpen(false)}
-            />
-          </React.Fragment>
-        )}
-      </AnimatePresence>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <p className="song-memory" aria-live="polite">
+          “{activeSong.message}”
+        </p>
+      </main>
+      <MusicPlayer
+        ref={player}
+        currentSong={activeSong}
+        onPlayingChange={setIsPlaying}
+        onNext={() => changeSong(1)}
+        onPrev={() => changeSong(-1)}
+      />
+      <LoveLetter
+        isOpen={isLetterOpen}
+        onClose={() => setIsLetterOpen(false)}
+      />
+      <Modal
+        isOpen={isPhotoOpen}
+        onClose={() => {
+          setIsPhotoOpen(false);
+          setSecretClickCount(0);
+        }}
+        title="My favorite place is with you"
+        className="photo-dialog"
+      >
+        <button
+          className="memory-photo"
+          aria-label="Our photo. Tap five times for a little secret."
+          onClick={() => {
+            const count = secretClickCount + 1;
+            setSecretClickCount(count);
+            if (count >= 5) {
+              setIsPhotoOpen(false);
+              setIsLetterOpen(true);
+              setSecretClickCount(0);
+            }
+          }}
+        >
+          <img
+            src="/images/central-star-photo.webp"
+            alt="APN and Jia holding hands in a field of orange flowers"
+          />
+        </button>
+        <p className="photo-caption">
+          {secretClickCount
+            ? `${5 - secretClickCount} more taps to a little secret…`
+            : "Of all the stars, you’re my favorite."}
+        </p>
+      </Modal>
     </div>
   );
 }
-
 export default App;

@@ -10,19 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/drei": "^9.105.6",
-    "@react-three/fiber": "^8.16.1",
-    "clsx": "^2.1.0",
-    "framer-motion": "^11.0.24",
-    "howler": "^2.2.4",
     "lucide-react": "^0.364.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwind-merge": "^2.2.2",
     "three": "^0.163.0"
   },
   "devDependencies": {
-    "@types/howler": "^2.2.11",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@types/three": "^0.163.0",
